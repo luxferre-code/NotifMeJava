@@ -35,7 +35,7 @@ public class JSONObject {
         }
         sb.deleteCharAt(sb.length() - 1);
         sb.append("}");
-        return sb.toString();
+        return sb.toString().replace("\n", "\\n");
     }
 
     public boolean isIn(String key) {

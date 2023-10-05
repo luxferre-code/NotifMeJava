@@ -51,7 +51,6 @@ public class PushBullet {
                 .build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            System.out.println(response.statusCode());
             return response.statusCode() == 200;
         } catch (Exception e) {
             System.out.println("Error: " + e);

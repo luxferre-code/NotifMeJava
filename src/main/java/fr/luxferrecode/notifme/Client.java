@@ -3,9 +3,9 @@ package fr.luxferrecode.notifme;
 import fr.luxferrecode.notifme.pushbullet.InvalidApiKeyException;
 import fr.luxferrecode.notifme.pushbullet.PushBullet;
 import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.component.CalendarComponent;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -13,7 +13,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Client {
 
@@ -45,26 +48,68 @@ public class Client {
         return ical;
     }
 
-    public String getTomorrowCalendar() {
+    public List<CalendarComponent> getSpecifiqueCalendar(int dayTimeout) {
         java.util.Calendar tomorrow = java.util.Calendar.getInstance();
-        tomorrow.add(java.util.Calendar.DAY_OF_MONTH, 1);
+        tomorrow.add(java.util.Calendar.DAY_OF_MONTH, dayTimeout);
         return getCalendar(tomorrow);
     }
 
-    public String getCalendar(java.util.Calendar date) {
-        ArrayList<String> events = new ArrayList<>();
-        System.out.println(date);
+    public List<CalendarComponent> getCalendar(java.util.Calendar date) {
+        List<CalendarComponent> events = new ArrayList<>();
         for (var component : calendar.getComponents()) {
-            if (component.getProperty("DTSTART").getValue().equals(date)) {
-                events.add(component.getProperty("SUMMARY").getValue());
+            if (component.getProperty("DTSTART").getValue().contains(String.format("%04d%02d%02d", date.get(java.util.Calendar.YEAR), date.get(java.util.Calendar.MONTH) + 1, date.get(java.util.Calendar.DAY_OF_MONTH)))) {
+                events.add(component);
             }
         }
-        return String.join("\n", events);
+        return events;
     }
 
-    public static void main(String[] args) throws Exception {
-        Client client = new Client("o.u7Ior0MWpfmmg07QBJoT8jLIrZpimaSj", "https://edt-iut.univ-lille.fr/Telechargements/ical/Edt_THUILLIER.ics?version=2018.0.3.6&idICal=34461F31CEA9FAEFEA0520DF200B4BD3&param=643d5b312e2e36325d2666683d3126663d31");
-        System.out.println(client.getTomorrowCalendar());
+    public List<CalendarComponent> getTomorrowCalendar() {
+        return getSpecifiqueCalendar(1);
+    }
+
+    public static String toStringCalendar(List<CalendarComponent> c) {
+        StringBuilder sb = new StringBuilder();
+        Collections.sort(c, (o1, o2) -> {
+            try {
+                return o1.getProperty("DTSTART").getValue().compareTo(o2.getProperty("DTSTART").getValue());
+            } catch (Exception e) {
+                return 0;
+            }
+        });
+        for (var component : c) {
+            String[] summary = component.getProperty("SUMMARY").getValue().split("-");
+            if(summary.length > 7) {
+                sb.append(summary[0]).append("-").append(summary[1]).append("- (Amphi)");
+            } else {
+                sb.append(component.getProperty("SUMMARY").getValue());
+                //sb.append(summary[0]).append("-").append(summary[1]);
+            }
+            sb.append("\nSalle: ").append(component.getProperty("LOCATION").getValue());
+            String start = addHour(component.getProperty("DTSTART").getValue().substring(9, 11), 2) + ":" + component.getProperty("DTSTART").getValue().substring(11, 13);
+            String end = addHour(component.getProperty("DTEND").getValue().substring(9, 11), 2) + ":" + component.getProperty("DTEND").getValue().substring(11, 13);
+            sb.append("\n").append(start).append(" - ").append(end).append("\n\n");
+        }
+        return sb.substring(0, sb.length() - 2);
+    }
+
+    private static String addHour(String s, int hour) {
+        LocalTime time = LocalTime.of(Integer.parseInt(s.substring(0, 2)), 0);
+        time = time.plusHours(hour);
+        return time.toString().substring(0, 2);
+    }
+
+    public boolean push(String title, String text) {
+        return pushBullet.push(title, text);
+    }
+
+    public boolean pushTomorrow() {
+        if(toStringCalendar(getTomorrowCalendar()).isEmpty()) return false;
+        return push("Emploi du temps", toStringCalendar(getTomorrowCalendar()));
+    }
+
+    public String getApiKey() {
+        return this.pushBullet.getApiKey();
     }
 
 }
