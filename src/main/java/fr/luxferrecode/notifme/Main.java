@@ -1,9 +1,6 @@
 package fr.luxferrecode.notifme;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -47,16 +44,18 @@ public class Main {
             LOGGER.info("Updating database...");
             con.setAutoCommit(false);
             con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+            PreparedStatement ps = con.prepareStatement("DELETE FROM client WHERE apikey = ?");
 
             for(String s : notValid) {
                 try {
-                    query = "DELETE FROM client WHERE apikey = '" + s + "'";
-                    System.out.println(query);
-                    stmt.executeUpdate(query);
+                    ps.setString(1, s);
+                    ps.addBatch();
                 } catch(Exception ignored) {
                     // Do nothing
                 }
             }
+
+            ps.executeBatch();
 
             con.commit();
             LOGGER.info("Updating database done");
