@@ -6,18 +6,26 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import static fr.luxferrecode.notifme.Main.LOGGER;
+
 public class DS {
 
-    private String driver, url, user, password;
+    public static final String PATHNAME = System.getProperty("user.home") + "/.config/NotifMeConfig/config.prop";
+    private String driver;
+    private String url;
+    private String user;
+    private String password;
     private static DS instance = null;
 
     private DS() {
         Properties p = new Properties();
-        if(!new File("config.prop").exists()) initFile();
+        if(!new File(PATHNAME).exists()) initFile();
         try {
-            p.load(new FileInputStream("config.prop"));
+            FileInputStream fis = new FileInputStream(PATHNAME);
+            p.load(fis);
+            fis.close();
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            LOGGER.severe(e.getMessage());
             System.exit(-1);
         }
         this.driver = p.getProperty("driver");
@@ -26,19 +34,20 @@ public class DS {
         this.password = p.getProperty("password");
         try { Class.forName(this.driver); }
         catch(ClassNotFoundException e) {
-            System.err.println(e.getMessage());
+            LOGGER.severe(e.getMessage());
             System.exit(-1);
         }
     }
 
     private static void initFile() {
-        try(BufferedWriter br = new BufferedWriter(new FileWriter(new File("config.prop")))) {
+        if(!new File(PATHNAME).getParentFile().exists()) new File(PATHNAME).getParentFile().mkdirs();
+        try(BufferedWriter br = new BufferedWriter(new FileWriter(new File(PATHNAME)))) {
             br.write("driver=org.mariadb.jdbc.Driver\n");
             br.write("url=JDBC\n");
             br.write("login=LOGIN\n");
             br.write("password=PASSWORD\n");
         } catch(IOException e) {
-            System.err.println(e.getMessage());
+            LOGGER.severe(e.getMessage());
             System.exit(-1);
         }
     }
@@ -47,4 +56,5 @@ public class DS {
         if(instance == null) instance = new DS();
         return DriverManager.getConnection(instance.url, instance.user, instance.password);
     }
+
 }

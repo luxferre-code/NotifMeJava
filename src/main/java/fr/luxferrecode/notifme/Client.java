@@ -20,6 +20,7 @@ import java.util.List;
 
 public class Client {
 
+    public static final String DTSTART = "DTSTART";
     public final PushBullet pushBullet;
     public final Calendar calendar;
 
@@ -44,7 +45,9 @@ public class Client {
                 .build();
         try {
             ical = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
-        } catch (Exception ignored) {}
+        } catch (InterruptedException | IOException ignored) {
+            // Do nothing
+        }
         return ical;
     }
 
@@ -57,7 +60,7 @@ public class Client {
     public List<CalendarComponent> getCalendar(java.util.Calendar date) {
         List<CalendarComponent> events = new ArrayList<>();
         for (var component : calendar.getComponents()) {
-            if (component.getProperty("DTSTART").getValue().contains(String.format("%04d%02d%02d", date.get(java.util.Calendar.YEAR), date.get(java.util.Calendar.MONTH) + 1, date.get(java.util.Calendar.DAY_OF_MONTH)))) {
+            if (component.getProperty(DTSTART).getValue().contains(String.format("%04d%02d%02d", date.get(java.util.Calendar.YEAR), date.get(java.util.Calendar.MONTH) + 1, date.get(java.util.Calendar.DAY_OF_MONTH)))) {
                 events.add(component);
             }
         }
@@ -72,7 +75,7 @@ public class Client {
         StringBuilder sb = new StringBuilder();
         Collections.sort(c, (o1, o2) -> {
             try {
-                return o1.getProperty("DTSTART").getValue().compareTo(o2.getProperty("DTSTART").getValue());
+                return o1.getProperty(DTSTART).getValue().compareTo(o2.getProperty(DTSTART).getValue());
             } catch (Exception e) {
                 return 0;
             }
@@ -83,10 +86,9 @@ public class Client {
                 sb.append(summary[0]).append("-").append(summary[1]).append("- (Amphi)");
             } else {
                 sb.append(component.getProperty("SUMMARY").getValue());
-                //sb.append(summary[0]).append("-").append(summary[1]);
             }
             sb.append("\nSalle: ").append(component.getProperty("LOCATION").getValue());
-            String start = addHour(component.getProperty("DTSTART").getValue().substring(9, 11), 2) + ":" + component.getProperty("DTSTART").getValue().substring(11, 13);
+            String start = addHour(component.getProperty(DTSTART).getValue().substring(9, 11), 2) + ":" + component.getProperty(DTSTART).getValue().substring(11, 13);
             String end = addHour(component.getProperty("DTEND").getValue().substring(9, 11), 2) + ":" + component.getProperty("DTEND").getValue().substring(11, 13);
             sb.append("\n").append(start).append(" - ").append(end).append("\n\n");
         }

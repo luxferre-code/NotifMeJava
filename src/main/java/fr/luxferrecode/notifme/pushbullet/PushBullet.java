@@ -1,5 +1,6 @@
 package fr.luxferrecode.notifme.pushbullet;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -23,8 +24,8 @@ public class PushBullet {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if(response.statusCode() == 200) isValid = true;
             else throw new InvalidApiKeyException("Invalid API Key");
-        } catch (Exception e) {
-            System.out.println("Error: " + e);
+        } catch (InterruptedException | IOException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -52,7 +53,7 @@ public class PushBullet {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             return response.statusCode() == 200;
-        } catch (Exception e) {
+        } catch (InterruptedException | IOException e) {
             System.out.println("Error: " + e);
             return false;
         }
