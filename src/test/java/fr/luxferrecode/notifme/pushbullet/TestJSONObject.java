@@ -9,7 +9,8 @@ class TestJSONObject {
 
     static JSONObject js = new JSONObject();
 
-    private TestJSONObject() {}
+    private TestJSONObject() {
+    }
 
     @Test
     void test_add() {
@@ -18,19 +19,19 @@ class TestJSONObject {
         try {
             js.add("test", "testModified");
             Assertions.fail();
-        } catch (KeyAlreadyExistsException e) {
+        } catch(KeyAlreadyExistsException e) {
             // It's ok
         }
         try {
             js.add(null, "test");
             Assertions.fail();
-        } catch (NullPointerException e) {
+        } catch(NullPointerException e) {
             // It's ok
         }
         try {
             js.add("test", null);
             Assertions.fail();
-        } catch (NullPointerException e) {
+        } catch(NullPointerException e) {
             // It's ok
         }
         js = new JSONObject();
@@ -41,13 +42,13 @@ class TestJSONObject {
         js.add("test", "test");
         try {
             js.modify("test", "testModified");
-        } catch (Exception e) {
+        } catch(Exception e) {
             Assertions.fail();
         }
         try {
             js.modify(null, "test");
             Assertions.fail();
-        } catch (NullPointerException e) {
+        } catch(NullPointerException e) {
             // It's ok
         } catch(KeyNotFoundException e) {
             Assertions.fail();
@@ -55,7 +56,7 @@ class TestJSONObject {
         try {
             js.modify("test", null);
             Assertions.fail();
-        } catch (NullPointerException e) {
+        } catch(NullPointerException e) {
             // It's ok
         } catch(KeyNotFoundException e) {
             Assertions.fail();
@@ -63,7 +64,7 @@ class TestJSONObject {
         try {
             js.modify("testModified", "test");
             Assertions.fail();
-        } catch (NullPointerException e) {
+        } catch(NullPointerException e) {
             Assertions.fail();
         } catch(KeyNotFoundException e) {
             // It's ok
@@ -76,13 +77,13 @@ class TestJSONObject {
         js.add("test", "test");
         try {
             js.delete("test");
-        } catch (Exception e) {
+        } catch(Exception e) {
             Assertions.fail();
         }
         try {
             js.delete(null);
             Assertions.fail();
-        } catch (NullPointerException e) {
+        } catch(NullPointerException e) {
             // It's ok
         } catch(KeyNotFoundException e) {
             Assertions.fail();
@@ -90,7 +91,7 @@ class TestJSONObject {
         try {
             js.delete("test");
             Assertions.fail();
-        } catch (NullPointerException e) {
+        } catch(NullPointerException e) {
             Assertions.fail();
         } catch(KeyNotFoundException e) {
             // It's ok

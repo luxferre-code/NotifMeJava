@@ -3,7 +3,6 @@ package fr.luxferrecode.notifme;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 
 import java.sql.*;
-import java.sql.Date;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -15,8 +14,7 @@ public class Main {
         LOGGER.info("~ NotifMe started ~");
         if(args.length == 0) {
             LOGGER.severe("Usage: java -jar NotifMe.jar [absences|notifall]");
-        }
-        else {
+        } else {
             switch(args[0]) {
                 case "absences":
                     absences();
@@ -30,6 +28,29 @@ public class Main {
         }
     }
 
+    public static void removeOnDB(Connection con, Set<String> apikeys) {
+        LOGGER.info("Deleting " + apikeys.size() + " apikeys from database");
+        try {
+            con.setAutoCommit(false);
+            PreparedStatement ps = con.prepareStatement("DELETE FROM client WHERE apikey = ?");
+            for(String a : apikeys) {
+                ps.setString(1, a);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+            con.commit();
+        } catch(SQLException e) {
+            LOGGER.severe(e.getMessage());
+            try {
+                con.rollback();
+            } catch(Exception ignored) {
+                //DO nothing
+            }
+        }
+
+        LOGGER.info("Deleting done");
+    }
+
     public static Set<Client>[] loadClients(Connection con) throws SQLException {
         Set<Client> clients = new HashSet<>();
         Set<String> notValid = new HashSet<>();
@@ -40,14 +61,15 @@ public class Main {
         while(result.next()) {
             String apikey = result.getString("apikey");
             String ical = result.getString("ical");
-            try { clients.add(new Client(apikey, ical)); }
-            catch(Exception e) {
+            try {
+                clients.add(new Client(apikey, ical));
+            } catch(Exception e) {
                 LOGGER.severe(e.getMessage());
                 notValid.add(apikey);
             }
         }
 
-        return new Set[] { clients, notValid };
+        return new Set[]{clients, notValid};
     }
 
     public static void notifAll() {
@@ -67,30 +89,13 @@ public class Main {
                     if(!client.pushTomorrow()) {
                         LOGGER.warning("Failed to send notification to " + client.getApiKey());
                     }
+                } catch(Exception e) {
+                    LOGGER.severe(e.getMessage());
                 }
-                catch(Exception e) { LOGGER.severe(e.getMessage()); }
             }
 
             LOGGER.info("Sending notifications done");
-            LOGGER.info("Updating database...");
-            con.setAutoCommit(false);
-            con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-            PreparedStatement ps = con.prepareStatement("DELETE FROM client WHERE apikey = ?");
-
-            for(String s : notValid) {
-                try {
-                    ps.setString(1, s);
-                    ps.addBatch();
-                } catch(Exception ignored) {
-                    // Do nothing
-                }
-            }
-
-            ps.executeBatch();
-
-            con.commit();
-            LOGGER.info("Updating database done");
-            LOGGER.info("~ NotifMe ended ~");
+            removeOnDB(con, notValid);
 
         } catch(SQLException e) {
             LOGGER.severe(e.getMessage());
@@ -109,21 +114,7 @@ public class Main {
             clients = (Set<Client>) sets[0];
             notValid = (Set<String>) sets[1];
 
-            LOGGER.info("Checking for absences...");
-            for(Client client : clients) {
-                List<CalendarComponent> calendar = client.getSpecifiqueCalendar(0);
-                for(CalendarComponent cc : calendar) {
-                    String summary = cc.getProperty("SUMMARY").getValue();
-                    if(summary.toLowerCase().contains("absent")) {
-                        if(absences.containsKey(client)) {
-                            absences.get(client).add(summary);
-                        }
-                        else {
-                            absences.put(client, new ArrayList<>(Collections.singletonList(summary)));
-                        }
-                    }
-                }
-            }
+            getAbsences(clients, absences);
 
             LOGGER.info("Checking for absences done");
             LOGGER.info("Checking on database...");
@@ -156,8 +147,27 @@ public class Main {
                 }
             }
 
+            removeOnDB(con, notValid);
+
         } catch(SQLException e) {
             LOGGER.severe(e.getMessage());
+        }
+    }
+
+    private static void getAbsences(Set<Client> clients, Map<Client, List<String>> absences) {
+        LOGGER.info("Checking for absences...");
+        for(Client client : clients) {
+            List<CalendarComponent> calendar = client.getSpecifiqueCalendar(0);
+            for(CalendarComponent cc : calendar) {
+                String summary = cc.getProperty("SUMMARY").getValue();
+                if(summary.toLowerCase().contains("absent")) {
+                    if(absences.containsKey(client)) {
+                        absences.get(client).add(summary);
+                    } else {
+                        absences.put(client, new ArrayList<>(Collections.singletonList(summary)));
+                    }
+                }
+            }
         }
     }
 

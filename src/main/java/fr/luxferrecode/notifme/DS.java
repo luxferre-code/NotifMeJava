@@ -11,11 +11,11 @@ import static fr.luxferrecode.notifme.Main.LOGGER;
 public class DS {
 
     public static final String PATHNAME = System.getProperty("user.home") + "/.config/NotifMeConfig/config.prop";
-    private String driver;
-    private String url;
-    private String user;
-    private String password;
     private static DS instance = null;
+    private final String driver;
+    private final String url;
+    private final String user;
+    private final String password;
 
     private DS() {
         Properties p = new Properties();
@@ -24,7 +24,7 @@ public class DS {
             FileInputStream fis = new FileInputStream(PATHNAME);
             p.load(fis);
             fis.close();
-        } catch (IOException e) {
+        } catch(IOException e) {
             LOGGER.severe(e.getMessage());
             System.exit(-1);
         }
@@ -32,8 +32,9 @@ public class DS {
         this.url = p.getProperty("url");
         this.user = p.getProperty("login");
         this.password = p.getProperty("password");
-        try { Class.forName(this.driver); }
-        catch(ClassNotFoundException e) {
+        try {
+            Class.forName(this.driver);
+        } catch(ClassNotFoundException e) {
             LOGGER.severe(e.getMessage());
             System.exit(-1);
         }

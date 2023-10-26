@@ -45,30 +45,10 @@ public class Client {
                 .build();
         try {
             ical = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
-        } catch (InterruptedException | IOException ignored) {
+        } catch(InterruptedException | IOException ignored) {
             // Do nothing
         }
         return ical;
-    }
-
-    public List<CalendarComponent> getSpecifiqueCalendar(int dayTimeout) {
-        java.util.Calendar tomorrow = java.util.Calendar.getInstance();
-        tomorrow.add(java.util.Calendar.DAY_OF_MONTH, dayTimeout);
-        return getCalendar(tomorrow);
-    }
-
-    public List<CalendarComponent> getCalendar(java.util.Calendar date) {
-        List<CalendarComponent> events = new ArrayList<>();
-        for (var component : calendar.getComponents()) {
-            if (component.getProperty(DTSTART).getValue().contains(String.format("%04d%02d%02d", date.get(java.util.Calendar.YEAR), date.get(java.util.Calendar.MONTH) + 1, date.get(java.util.Calendar.DAY_OF_MONTH)))) {
-                events.add(component);
-            }
-        }
-        return events;
-    }
-
-    public List<CalendarComponent> getTomorrowCalendar() {
-        return getSpecifiqueCalendar(1);
     }
 
     public static String toStringCalendar(List<CalendarComponent> c) {
@@ -76,11 +56,11 @@ public class Client {
         Collections.sort(c, (o1, o2) -> {
             try {
                 return o1.getProperty(DTSTART).getValue().compareTo(o2.getProperty(DTSTART).getValue());
-            } catch (Exception e) {
+            } catch(Exception e) {
                 return 0;
             }
         });
-        for (var component : c) {
+        for(var component : c) {
             String[] summary = component.getProperty("SUMMARY").getValue().split("-");
             if(summary.length > 7) {
                 sb.append(summary[0]).append("-").append(summary[1]).append("- (Amphi)");
@@ -99,6 +79,26 @@ public class Client {
         LocalTime time = LocalTime.of(Integer.parseInt(s.substring(0, 2)), 0);
         time = time.plusHours(hour);
         return time.toString().substring(0, 2);
+    }
+
+    public List<CalendarComponent> getSpecifiqueCalendar(int dayTimeout) {
+        java.util.Calendar tomorrow = java.util.Calendar.getInstance();
+        tomorrow.add(java.util.Calendar.DAY_OF_MONTH, dayTimeout);
+        return getCalendar(tomorrow);
+    }
+
+    public List<CalendarComponent> getCalendar(java.util.Calendar date) {
+        List<CalendarComponent> events = new ArrayList<>();
+        for(var component : calendar.getComponents()) {
+            if(component.getProperty(DTSTART).getValue().contains(String.format("%04d%02d%02d", date.get(java.util.Calendar.YEAR), date.get(java.util.Calendar.MONTH) + 1, date.get(java.util.Calendar.DAY_OF_MONTH)))) {
+                events.add(component);
+            }
+        }
+        return events;
+    }
+
+    public List<CalendarComponent> getTomorrowCalendar() {
+        return getSpecifiqueCalendar(1);
     }
 
     public boolean push(String title, String text) {
