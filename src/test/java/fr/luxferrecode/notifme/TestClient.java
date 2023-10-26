@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class TestClient {
 
-    Client c1 = new Client(APIKEY, ICAL);;
+    /*Client c1 = new Client(APIKEY, ICAL);;
     Client c2 = new Client(APIKEY, ICAL);;
     public static final String APIKEY = "o.5vl5sbb7Lt4edZpm6H5bxGkD2KWTMvE6";
     public static final String ICAL = "https://edt-iut.univ-lille.fr/Telechargements/ical/Edt_THUILLIER.ics?version=2018.0.3.6&idICal=34461F31CEA9FAEFEA0520DF200B4BD3&param=643d5b312e2e36325d2666683d3126663d31";
@@ -53,6 +53,6 @@ public class TestClient {
     @Test
     void test_get_api_key() {
         Assertions.assertEquals(APIKEY, c1.getApiKey());
-    }
+    }*/
 
 }

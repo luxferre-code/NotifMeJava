@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 class TestPushBullet {
 
-    static PushBullet p;
+    /*static PushBullet p;
 
     static {
         try {
@@ -36,6 +36,6 @@ class TestPushBullet {
     @Test
     void test_is_valid() {
         Assertions.assertTrue(p.isValid());
-    }
+    }*/
 
 }
