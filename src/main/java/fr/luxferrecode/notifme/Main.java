@@ -39,6 +39,7 @@ public class Main {
             }
             ps.executeBatch();
             con.commit();
+            ps.close();
         } catch(SQLException e) {
             LOGGER.severe(e.getMessage());
             try {
@@ -68,7 +69,7 @@ public class Main {
                 notValid.add(apikey);
             }
         }
-
+        stmt.close();
         return new Set[]{clients, notValid};
     }
 
@@ -146,6 +147,11 @@ public class Main {
                     }
                 }
             }
+
+            ps2.executeBatch();
+            con.commit();
+            ps.close();
+            ps2.close();
 
             removeOnDB(con, notValid);
 

@@ -15,7 +15,7 @@ public class PushBullet {
 
     public PushBullet(String apikey) throws InvalidApiKeyException {
         this.APIKEY = apikey;
-        if(this.APIKEY == "TEST") {
+        if(this.APIKEY.equals("TEST")) {
             this.isValid = true;
             return;
         }
@@ -28,8 +28,8 @@ public class PushBullet {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if(response.statusCode() == 200) isValid = true;
             else throw new InvalidApiKeyException("Invalid API Key");
-        } catch(InterruptedException | IOException e) {
-            System.out.println(e.getMessage());
+        } catch(IOException | InterruptedException e) {
+            System.err.println(e.getMessage());
         }
     }
 
