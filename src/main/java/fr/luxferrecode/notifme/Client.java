@@ -13,20 +13,21 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Client {
 
     public static final String DTSTART = "DTSTART";
     public final PushBullet pushBullet;
     public final Calendar calendar;
+    public static TimeZone defaultTZ;
 
     public Client(PushBullet pb, Calendar calendar) {
         this.pushBullet = pb;
         this.calendar = calendar;
+        //this.defaultTZ = this.calendar.get TODO
     }
 
     public Client(String apikey, Calendar c) throws InvalidApiKeyException {
@@ -68,7 +69,7 @@ public class Client {
                 sb.append(component.getProperty("SUMMARY").getValue());
             }
             sb.append("\nSalle: ").append(component.getProperty("LOCATION").getValue());
-            String start = addHour(component.getProperty(DTSTART).getValue().substring(9, 11), 2) + ":" + component.getProperty(DTSTART).getValue().substring(11, 13);
+            String start = dateParsing(new Date(Long.parseLong(component.getProperty(DTSTART).getValue())), defaultTZ, TimeZone.getTimeZone("Europe/Paris"));
             String end = addHour(component.getProperty("DTEND").getValue().substring(9, 11), 2) + ":" + component.getProperty("DTEND").getValue().substring(11, 13);
             sb.append("\n").append(start).append(" - ").append(end).append("\n\n");
         }
@@ -79,6 +80,13 @@ public class Client {
         LocalTime time = LocalTime.of(Integer.parseInt(s.substring(0, 2)), 0);
         time = time.plusHours(hour);
         return time.toString().substring(0, 2);
+    }
+
+    public static String dateParsing(Date date, TimeZone defaultTimezone, TimeZone toTimeZone) {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        sdf.setTimeZone(defaultTimezone);
+        sdf.setTimeZone(toTimeZone);
+        return sdf.format(date);
     }
 
     public List<CalendarComponent> getSpecifiqueCalendar(int dayTimeout) {
